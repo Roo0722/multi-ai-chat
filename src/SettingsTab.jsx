@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-export default function SettingsTab() {
-  const [groqKey, setGroqKey] = useState('');
-  const [openRouterKey, setOpenRouterKey] = useState('');
-  const [tavilyKey, setTavilyKey] = useState('');
-  const [groqModel, setGroqModel] = useState('llama-3.3-70b-versatile');
-  const [openRouterModel, setOpenRouterModel] = useState('');
-  const [activeProvider, setActiveProvider] = useState('groq');
-
+export default function SettingsTab({ settings, updateSettings }) {
   return (
     <div className="settings-tab">
       <h2>Settings</h2>
 
       <section>
         <label>Active Provider</label>
-        <select value={activeProvider} onChange={(e) => setActiveProvider(e.target.value)}>
+        <select
+          value={settings.activeProvider}
+          onChange={(e) => updateSettings({ activeProvider: e.target.value })}
+        >
           <option value="groq">Groq</option>
           <option value="openrouter">OpenRouter</option>
         </select>
@@ -24,15 +20,15 @@ export default function SettingsTab() {
         <label>Groq API Key</label>
         <input
           type="password"
-          value={groqKey}
-          onChange={(e) => setGroqKey(e.target.value)}
+          value={settings.groqKey}
+          onChange={(e) => updateSettings({ groqKey: e.target.value })}
           placeholder="gsk_..."
         />
         <label>Groq Model</label>
         <input
           type="text"
-          value={groqModel}
-          onChange={(e) => setGroqModel(e.target.value)}
+          value={settings.groqModel}
+          onChange={(e) => updateSettings({ groqModel: e.target.value })}
         />
       </section>
 
@@ -40,16 +36,16 @@ export default function SettingsTab() {
         <label>OpenRouter API Key</label>
         <input
           type="password"
-          value={openRouterKey}
-          onChange={(e) => setOpenRouterKey(e.target.value)}
+          value={settings.openRouterKey}
+          onChange={(e) => updateSettings({ openRouterKey: e.target.value })}
           placeholder="sk-or-..."
         />
         <label>OpenRouter Model</label>
         <input
           type="text"
-          value={openRouterModel}
-          onChange={(e) => setOpenRouterModel(e.target.value)}
-          placeholder="e.g. anthropic/claude-3.5-sonnet"
+          value={settings.openRouterModel}
+          onChange={(e) => updateSettings({ openRouterModel: e.target.value })}
+          placeholder="e.g. openai/gpt-4o-mini"
         />
       </section>
 
@@ -57,15 +53,23 @@ export default function SettingsTab() {
         <label>Tavily API Key</label>
         <input
           type="password"
-          value={tavilyKey}
-          onChange={(e) => setTavilyKey(e.target.value)}
+          value={settings.tavilyKey}
+          onChange={(e) => updateSettings({ tavilyKey: e.target.value })}
           placeholder="tvly-..."
         />
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={settings.useTavily}
+            onChange={(e) => updateSettings({ useTavily: e.target.checked })}
+          />
+          Use Tavily web search before each reply
+        </label>
       </section>
 
       <p className="note">
-        Note: these fields are not yet saved to device storage. Local
-        persistence will be wired up in the next step.
+        Saved automatically on-device. Switching tabs or closing the app will
+        not lose these values.
       </p>
     </div>
   );

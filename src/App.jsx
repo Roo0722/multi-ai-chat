@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ChatTab from './ChatTab.jsx';
 import SettingsTab from './SettingsTab.jsx';
+import { loadSettings, saveSettings } from './settingsStore.js';
 
 export default function App() {
   const [tab, setTab] = useState('chat');
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    loadSettings().then(setSettings);
+  }, []);
+
+  async function updateSettings(partial) {
+    const next = { ...settings, ...partial };
+    setSettings(next);
+    await saveSettings(next);
+  }
+
+  if (!settings) {
+    return <div className="app-loading">Loading...</div>;
+  }
 
   return (
     <div className="app">
@@ -12,7 +28,11 @@ export default function App() {
       </header>
 
       <main className="app-content">
-        {tab === 'chat' ? <ChatTab /> : <SettingsTab />}
+        {tab === 'chat' ? (
+          <ChatTab settings={settings} />
+        ) : (
+          <SettingsTab settings={settings} updateSettings={updateSettings} />
+        )}
       </main>
 
       <nav className="tab-bar">
