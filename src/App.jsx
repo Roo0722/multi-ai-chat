@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { MessageSquare, Settings } from 'lucide-react';
 import ChatTab from './ChatTab.jsx';
 import SettingsTab from './SettingsTab.jsx';
 import { loadSettings, saveSettings } from './settingsStore.js';
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
+        <MessageSquare size={18} strokeWidth={2} style={{ color: '#4f8cff' }} />
         <h1>Multi AI Chat</h1>
       </header>
 
@@ -40,12 +42,14 @@ export default function App() {
           className={tab === 'chat' ? 'tab-btn active' : 'tab-btn'}
           onClick={() => setTab('chat')}
         >
+          <MessageSquare size={16} strokeWidth={2} />
           Chat
         </button>
         <button
           className={tab === 'settings' ? 'tab-btn active' : 'tab-btn'}
           onClick={() => setTab('settings')}
         >
+          <Settings size={16} strokeWidth={2} />
           Settings
         </button>
       </nav>

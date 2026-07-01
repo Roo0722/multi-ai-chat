@@ -13,16 +13,25 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
 }
 
 .app-header {
   padding: 12px 16px;
   border-bottom: 1px solid #232733;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .app-header h1 {
-  font-size: 18px;
+  font-size: 17px;
   margin: 0;
+}
+
+.app-loading {
+  color: #888;
+  padding: 16px;
 }
 
 .app-content {
@@ -31,6 +40,7 @@ body {
   padding: 12px;
 }
 
+/* Tab bar */
 .tab-bar {
   display: flex;
   border-top: 1px solid #232733;
@@ -43,6 +53,11 @@ body {
   border: none;
   color: #888;
   font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .tab-btn.active {
@@ -50,6 +65,7 @@ body {
   border-top: 2px solid #4f8cff;
 }
 
+/* Chat */
 .chat-tab {
   display: flex;
   flex-direction: column;
@@ -59,23 +75,136 @@ body {
 .message-list {
   flex: 1;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.empty-hint {
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+}
+
+.empty-hint p {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.empty-hint code {
+  background: #1a1d27;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #aac4ff;
 }
 
 .message {
-  margin-bottom: 12px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
   background: #1a1d27;
 }
 
 .message.user {
   background: #1e2a4a;
+  align-self: flex-end;
+  max-width: 90%;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  color: #888;
 }
 
 .message-role {
   font-size: 11px;
   color: #888;
-  display: block;
+}
+
+.message-body {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.message-body p {
+  margin: 0 0 8px 0;
+}
+
+.message-body p:last-child {
+  margin-bottom: 0;
+}
+
+.message-body h1, .message-body h2, .message-body h3 {
+  font-size: 15px;
+  margin: 10px 0 4px;
+  color: #aac4ff;
+}
+
+.message-body code {
+  background: #0d1020;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #7dd3fc;
+}
+
+.message-body pre {
+  background: #0d1020;
+  padding: 10px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+.message-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.message-body ul, .message-body ol {
+  padding-left: 20px;
+  margin: 6px 0;
+}
+
+.message-body li {
+  margin-bottom: 3px;
+}
+
+.message-body a {
+  color: #4f8cff;
+  word-break: break-all;
+}
+
+.message-body blockquote {
+  border-left: 3px solid #4f8cff;
+  margin: 6px 0;
+  padding-left: 10px;
+  color: #aaa;
+}
+
+.message-body strong {
+  color: #fff;
+}
+
+.loading-row, .error-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px 4px;
+  color: #888;
+}
+
+.error-row {
+  color: #ff6b6b;
 }
 
 .input-row {
@@ -86,26 +215,61 @@ body {
 
 .input-row input {
   flex: 1;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid #232733;
   background: #1a1d27;
   color: #fff;
+  font-size: 14px;
 }
 
-.input-row button {
-  padding: 10px 16px;
-  border-radius: 8px;
+.input-row input:disabled {
+  opacity: 0.5;
+}
+
+.send-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
   border: none;
   background: #4f8cff;
   color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+}
+
+/* Settings */
+.settings-tab {
+  padding-bottom: 32px;
+}
+
+.settings-tab h2 {
+  font-size: 16px;
+  margin: 0 0 16px;
 }
 
 .settings-tab section {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
+  gap: 7px;
+  border-bottom: 1px solid #1a1d27;
+  padding-bottom: 16px;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  color: #aac4ff;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
 }
 
 .settings-tab label {
@@ -113,18 +277,16 @@ body {
   color: #888;
 }
 
-.settings-tab input,
+.settings-tab input[type="text"],
+.settings-tab input[type="password"],
 .settings-tab select {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #232733;
   background: #1a1d27;
   color: #fff;
-}
-
-.note {
-  font-size: 12px;
-  color: #666;
+  font-size: 14px;
+  width: 100%;
 }
 
 .checkbox-label {
@@ -132,19 +294,49 @@ body {
   align-items: center;
   gap: 8px;
   flex-direction: row;
-}
-
-.empty-hint {
+  color: #ccc;
   font-size: 13px;
-  color: #777;
 }
 
-.error-text {
+.test-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.test-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #4f8cff;
+  background: transparent;
+  color: #4f8cff;
   font-size: 13px;
-  color: #ff6b6b;
+  cursor: pointer;
 }
 
-.app-loading {
-  color: #888;
-  padding: 16px;
+.test-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.test-msg {
+  font-size: 12px;
+  color: #aaa;
+  flex: 1;
+}
+
+.note {
+  font-size: 12px;
+  color: #555;
+}
+
+/* Spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
