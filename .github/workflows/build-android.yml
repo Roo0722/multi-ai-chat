@@ -45,6 +45,7 @@ jobs:
           cp public/icons/ic_launcher_xxhdpi.png   $RES/mipmap-xxhdpi/ic_launcher_round.png
           cp public/icons/ic_launcher_xxxhdpi.png  $RES/mipmap-xxxhdpi/ic_launcher.png
           cp public/icons/ic_launcher_xxxhdpi.png  $RES/mipmap-xxxhdpi/ic_launcher_round.png
+          rm -rf $RES/mipmap-anydpi-v26
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
