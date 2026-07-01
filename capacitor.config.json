@@ -1,6 +1,6 @@
 {
   "appId": "com.junjun.multiaichat",
-  "appName": "Multi AI Chat",
+  "appName": "Nexus",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

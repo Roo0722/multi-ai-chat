@@ -27,7 +27,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <MessageSquare size={18} strokeWidth={2} style={{ color: '#4f8cff' }} />
-        <h1>Multi AI Chat</h1>
+        <h1>Nexus</h1>
       </header>
 
       <main className="app-content">
