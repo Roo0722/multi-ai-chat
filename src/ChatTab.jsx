@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Bot, User, AlertCircle, Loader, Trash2, Copy, Download, Check } from 'lucide-react';
+import { Share } from '@capacitor/share';
 import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
 
 function CopyDownloadBar({ content, index }) {
@@ -15,23 +16,17 @@ function CopyDownloadBar({ content, index }) {
   }
 
   async function handleShare() {
-    const filename = `nexus-response-${index + 1}.md`;
     setSharing(true);
     try {
-      const blob = new Blob([content], { type: 'text/plain' });
-      const file = new File([blob], filename, { type: 'text/plain' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: filename });
-      } else if (navigator.share) {
-        await navigator.share({ title: filename, text: content });
-      } else {
-        // Last resort fallback: copy
-        await navigator.clipboard.writeText(content);
-        alert('Copied to clipboard (share not supported on this device)');
-      }
+      await Share.share({
+        title: `Nexus Response ${index + 1}`,
+        text: content,
+        dialogTitle: 'Save or share response'
+      });
     } catch (e) {
-      if (e.name !== 'AbortError') {
-        await navigator.clipboard.writeText(content);
+      // User cancelled share sheet -- not an error
+      if (e && e.message && !e.message.includes('cancel')) {
+        navigator.clipboard.writeText(content);
       }
     } finally {
       setSharing(false);
