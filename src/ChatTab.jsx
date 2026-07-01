@@ -1,7 +1,41 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User, AlertCircle, Loader, Trash2 } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Loader, Trash2, Copy, Download, Check } from 'lucide-react';
 import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
+
+function CopyDownloadBar({ content, index }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  function handleDownload() {
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-response-${index + 1}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="msg-action-bar">
+      <button className="msg-action-btn" onClick={handleCopy} title="Copy text">
+        {copied ? <Check size={13} strokeWidth={2} style={{ color: '#4caf50' }} /> : <Copy size={13} strokeWidth={2} />}
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+      <button className="msg-action-btn" onClick={handleDownload} title="Download as .md">
+        <Download size={13} strokeWidth={2} />
+        Download
+      </button>
+    </div>
+  );
+}
 
 export default function ChatTab({ settings, messages, setMessages }) {
   const [input, setInput] = useState('');
@@ -64,9 +98,11 @@ export default function ChatTab({ settings, messages, setMessages }) {
     }
   }
 
+  // Count only assistant messages for labeling downloads
+  let assistantIndex = -1;
+
   return (
     <div className="chat-tab">
-      {/* Chat toolbar */}
       <div className="chat-toolbar">
         <span className="chat-provider-label">
           {providerLabel} / <code>{modelLabel}</code>
@@ -88,21 +124,28 @@ export default function ChatTab({ settings, messages, setMessages }) {
           </div>
         )}
 
-        {messages.map((m, i) => (
-          <div key={i} className={`message ${m.role}`}>
-            <div className="message-header">
-              {m.role === 'user'
-                ? <User size={14} strokeWidth={2} />
-                : <Bot size={14} strokeWidth={2} />}
-              <span className="message-role">{m.role === 'user' ? 'You' : 'AI'}</span>
+        {messages.map((m, i) => {
+          if (m.role === 'assistant') assistantIndex++;
+          const aiIdx = assistantIndex;
+          return (
+            <div key={i} className={`message ${m.role}`}>
+              <div className="message-header">
+                {m.role === 'user'
+                  ? <User size={14} strokeWidth={2} />
+                  : <Bot size={14} strokeWidth={2} />}
+                <span className="message-role">{m.role === 'user' ? 'You' : 'AI'}</span>
+              </div>
+              <div className="message-body">
+                {m.role === 'assistant'
+                  ? <ReactMarkdown>{m.content}</ReactMarkdown>
+                  : <p>{m.content}</p>}
+              </div>
+              {m.role === 'assistant' && (
+                <CopyDownloadBar content={m.content} index={aiIdx} />
+              )}
             </div>
-            <div className="message-body">
-              {m.role === 'assistant'
-                ? <ReactMarkdown>{m.content}</ReactMarkdown>
-                : <p>{m.content}</p>}
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {loading && (
           <div className="loading-row">
