@@ -5,6 +5,7 @@ import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
 
 function CopyDownloadBar({ content, index }) {
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   function handleCopy() {
     navigator.clipboard.writeText(content).then(() => {
@@ -13,14 +14,28 @@ function CopyDownloadBar({ content, index }) {
     });
   }
 
-  function handleDownload() {
-    const blob = new Blob([content], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ai-response-${index + 1}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async function handleShare() {
+    const filename = `nexus-response-${index + 1}.md`;
+    setSharing(true);
+    try {
+      const blob = new Blob([content], { type: 'text/plain' });
+      const file = new File([blob], filename, { type: 'text/plain' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+      } else if (navigator.share) {
+        await navigator.share({ title: filename, text: content });
+      } else {
+        // Last resort fallback: copy
+        await navigator.clipboard.writeText(content);
+        alert('Copied to clipboard (share not supported on this device)');
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        await navigator.clipboard.writeText(content);
+      }
+    } finally {
+      setSharing(false);
+    }
   }
 
   return (
@@ -29,9 +44,9 @@ function CopyDownloadBar({ content, index }) {
         {copied ? <Check size={13} strokeWidth={2} style={{ color: '#4caf50' }} /> : <Copy size={13} strokeWidth={2} />}
         {copied ? 'Copied' : 'Copy'}
       </button>
-      <button className="msg-action-btn" onClick={handleDownload} title="Download as .md">
+      <button className="msg-action-btn" onClick={handleShare} disabled={sharing} title="Share / Save">
         <Download size={13} strokeWidth={2} />
-        Download
+        {sharing ? 'Sharing...' : 'Share'}
       </button>
     </div>
   );
