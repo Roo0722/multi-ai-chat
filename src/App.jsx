@@ -7,6 +7,7 @@ import { loadSettings, saveSettings } from './settingsStore.js';
 export default function App() {
   const [tab, setTab] = useState('chat');
   const [settings, setSettings] = useState(null);
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     loadSettings().then(setSettings);
@@ -31,7 +32,11 @@ export default function App() {
 
       <main className="app-content">
         {tab === 'chat' ? (
-          <ChatTab settings={settings} />
+          <ChatTab
+            settings={settings}
+            messages={messages}
+            setMessages={setMessages}
+          />
         ) : (
           <SettingsTab settings={settings} updateSettings={updateSettings} />
         )}

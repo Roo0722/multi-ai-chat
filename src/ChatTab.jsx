@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User, AlertCircle, Loader } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Loader, Trash2 } from 'lucide-react';
 import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
 
-export default function ChatTab({ settings }) {
-  const [messages, setMessages] = useState([]);
+export default function ChatTab({ settings, messages, setMessages }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,6 +16,11 @@ export default function ChatTab({ settings }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  function handleClear() {
+    setMessages([]);
+    setError('');
+  }
 
   async function handleSend() {
     if (!input.trim() || loading) return;
@@ -62,11 +66,24 @@ export default function ChatTab({ settings }) {
 
   return (
     <div className="chat-tab">
+      {/* Chat toolbar */}
+      <div className="chat-toolbar">
+        <span className="chat-provider-label">
+          {providerLabel} / <code>{modelLabel}</code>
+        </span>
+        {messages.length > 0 && (
+          <button className="clear-btn" onClick={handleClear} title="Clear chat">
+            <Trash2 size={15} strokeWidth={2} />
+            Clear
+          </button>
+        )}
+      </div>
+
       <div className="message-list">
         {messages.length === 0 && (
           <div className="empty-hint">
             <Bot size={32} strokeWidth={1.5} style={{ marginBottom: 8, color: '#4f8cff' }} />
-            <p>Using <strong>{providerLabel}</strong> / <code>{modelLabel}</code></p>
+            <p>Chat history lasts until you close the app.</p>
             <p>Change provider and model in Settings.</p>
           </div>
         )}
@@ -75,7 +92,7 @@ export default function ChatTab({ settings }) {
           <div key={i} className={`message ${m.role}`}>
             <div className="message-header">
               {m.role === 'user'
-                ? <User size={14} strokeWidth={2} /> 
+                ? <User size={14} strokeWidth={2} />
                 : <Bot size={14} strokeWidth={2} />}
               <span className="message-role">{m.role === 'user' ? 'You' : 'AI'}</span>
             </div>
