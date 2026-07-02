@@ -222,6 +222,42 @@ body {
   border-radius: 8px;
   overflow-x: auto;
   font-size: 12px;
+  margin: 0;
+}
+
+.code-block-wrapper {
+  position: relative;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: #0d1020;
+  border: 1px solid #1e2133;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  padding: 32px 10px 10px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid #2a2d3a;
+  background: #1a1d27;
+  color: #888;
+  font-size: 11px;
+  cursor: pointer;
+  z-index: 1;
 }
 
 .message-body pre code {

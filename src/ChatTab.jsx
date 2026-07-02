@@ -1,8 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User, AlertCircle, Loader, Trash2, Copy, Download, Check } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Loader, Trash2, Copy, Download, Check, Share2 } from 'lucide-react';
 import { Share } from '@capacitor/share';
 import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
+
+function CodeBlock({ children }) {
+  const [copied, setCopied] = useState(false);
+  const code = String(children).replace(/\n$/, '');
+
+  function handleCopy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div className="code-block-wrapper">
+      <button className="code-copy-btn" onClick={handleCopy}>
+        {copied
+          ? <><Check size={12} strokeWidth={2} style={{ color: '#4caf50' }} /> Copied</>
+          : <><Copy size={12} strokeWidth={2} /> Copy</>}
+      </button>
+      <pre><code>{code}</code></pre>
+    </div>
+  );
+}
+
+const markdownComponents = {
+  code({ node, inline, className, children, ...props }) {
+    if (inline) {
+      return <code className={className} {...props}>{children}</code>;
+    }
+    return <CodeBlock>{children}</CodeBlock>;
+  }
+};
 
 function CopyDownloadBar({ content, index }) {
   const [copied, setCopied] = useState(false);
@@ -147,7 +179,7 @@ export default function ChatTab({ settings, messages, setMessages }) {
               </div>
               <div className="message-body">
                 {m.role === 'assistant'
-                  ? <ReactMarkdown>{m.content}</ReactMarkdown>
+                  ? <ReactMarkdown components={markdownComponents}>{m.content}</ReactMarkdown>
                   : <p>{m.content}</p>}
               </div>
               {m.role === 'assistant' && (
