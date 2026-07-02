@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { KeyRound, Bot, Globe, Search, CheckCircle, XCircle, Loader } from 'lucide-react';
-import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
+import { KeyRound, Bot, Globe, Search, CheckCircle, XCircle, Loader, Image } from 'lucide-react';
+import { chatGroq, chatOpenRouter, searchTavily, generateImage } from './api.js';
 
 function StatusBadge({ status }) {
   if (!status) return null;
@@ -10,8 +10,8 @@ function StatusBadge({ status }) {
 }
 
 export default function SettingsTab({ settings, updateSettings }) {
-  const [testStatus, setTestStatus] = useState({ groq: null, openrouter: null, tavily: null });
-  const [testMsg, setTestMsg] = useState({ groq: '', openrouter: '', tavily: '' });
+  const [testStatus, setTestStatus] = useState({ groq: null, openrouter: null, tavily: null, image: null });
+  const [testMsg, setTestMsg] = useState({ groq: '', openrouter: '', tavily: '', image: '' });
 
   async function testGroq() {
     setTestStatus((s) => ({ ...s, groq: 'testing' }));
@@ -53,6 +53,19 @@ export default function SettingsTab({ settings, updateSettings }) {
     } catch (e) {
       setTestStatus((s) => ({ ...s, tavily: 'error' }));
       setTestMsg((s) => ({ ...s, tavily: e.message.slice(0, 80) }));
+    }
+  }
+
+  async function testImage() {
+    setTestStatus((s) => ({ ...s, image: 'testing' }));
+    setTestMsg((s) => ({ ...s, image: '' }));
+    try {
+      await generateImage('a simple blue circle');
+      setTestStatus((s) => ({ ...s, image: 'ok' }));
+      setTestMsg((s) => ({ ...s, image: 'Image generation is working.' }));
+    } catch (e) {
+      setTestStatus((s) => ({ ...s, image: 'error' }));
+      setTestMsg((s) => ({ ...s, image: e.message.slice(0, 80) }));
     }
   }
 
@@ -156,6 +169,28 @@ export default function SettingsTab({ settings, updateSettings }) {
           </button>
           <StatusBadge status={testStatus.tavily} />
           {testMsg.tavily && <span className="test-msg">{testMsg.tavily}</span>}
+        </div>
+      </section>
+
+      {/* Image Generation */}
+      <section>
+        <div className="section-label">
+          <Image size={15} strokeWidth={2} />
+          <label>Image Generation</label>
+        </div>
+        <p className="note" style={{ marginTop: 0 }}>
+          Powered by Pollinations.ai Flux -- free, no API key required.
+        </p>
+        <div className="test-row">
+          <button
+            className="test-btn"
+            onClick={testImage}
+            disabled={testStatus.image === 'testing'}
+          >
+            Test Image Gen
+          </button>
+          <StatusBadge status={testStatus.image} />
+          {testMsg.image && <span className="test-msg">{testMsg.image}</span>}
         </div>
       </section>
 

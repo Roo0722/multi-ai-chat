@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wand2, Share2, AlertCircle, Loader, ImageOff } from 'lucide-react';
+import { Wand2, Share2, AlertCircle, Loader, ImageOff, Trash2 } from 'lucide-react';
 import { Share } from '@capacitor/share';
 import { generateImage } from './api.js';
 
@@ -10,6 +10,7 @@ export default function ImageTab({ imageState, setImageState }) {
   function setPrompt(val) { setImageState((s) => ({ ...s, prompt: val })); }
   function setImageUrl(val) { setImageState((s) => ({ ...s, imageUrl: val })); }
   function setError(val) { setImageState((s) => ({ ...s, error: val })); }
+  function handleClear() { setImageState({ prompt: '', imageUrl: '', error: '' }); }
 
   async function handleGenerate() {
     if (!prompt.trim() || loading) return;
@@ -53,15 +54,23 @@ export default function ImageTab({ imageState, setImageState }) {
           rows={3}
           disabled={loading}
         />
-        <button
-          className="generate-btn"
-          onClick={handleGenerate}
-          disabled={!prompt.trim() || loading}
-        >
-          {loading
-            ? <><Loader size={16} strokeWidth={2} className="spin" /> Generating...</>
-            : <><Wand2 size={16} strokeWidth={2} /> Generate</>}
-        </button>
+        <div className="image-btn-row">
+          <button
+            className="generate-btn"
+            onClick={handleGenerate}
+            disabled={!prompt.trim() || loading}
+          >
+            {loading
+              ? <><Loader size={16} strokeWidth={2} className="spin" /> Generating...</>
+              : <><Wand2 size={16} strokeWidth={2} /> Generate</>}
+          </button>
+          {(imageUrl || prompt || error) && (
+            <button className="clear-btn" onClick={handleClear} disabled={loading}>
+              <Trash2 size={15} strokeWidth={2} />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (

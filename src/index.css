@@ -431,6 +431,15 @@ body {
   opacity: 0.5;
 }
 
+.image-btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.image-btn-row .generate-btn {
+  flex: 1;
+}
+
 .generate-btn {
   display: flex;
   align-items: center;
