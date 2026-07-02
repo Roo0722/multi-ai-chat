@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { MessageSquare, Settings } from 'lucide-react';
+import { MessageSquare, Settings, Image } from 'lucide-react';
 import ChatTab from './ChatTab.jsx';
 import SettingsTab from './SettingsTab.jsx';
+import ImageTab from './ImageTab.jsx';
 import { loadSettings, saveSettings } from './settingsStore.js';
 
 export default function App() {
@@ -31,13 +32,11 @@ export default function App() {
       </header>
 
       <main className="app-content">
-        {tab === 'chat' ? (
-          <ChatTab
-            settings={settings}
-            messages={messages}
-            setMessages={setMessages}
-          />
-        ) : (
+        {tab === 'chat' && (
+          <ChatTab settings={settings} messages={messages} setMessages={setMessages} />
+        )}
+        {tab === 'image' && <ImageTab />}
+        {tab === 'settings' && (
           <SettingsTab settings={settings} updateSettings={updateSettings} />
         )}
       </main>
@@ -49,6 +48,13 @@ export default function App() {
         >
           <MessageSquare size={16} strokeWidth={2} />
           Chat
+        </button>
+        <button
+          className={tab === 'image' ? 'tab-btn active' : 'tab-btn'}
+          onClick={() => setTab('image')}
+        >
+          <Image size={16} strokeWidth={2} />
+          Image
         </button>
         <button
           className={tab === 'settings' ? 'tab-btn active' : 'tab-btn'}

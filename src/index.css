@@ -400,3 +400,93 @@ body {
 .spin {
   animation: spin 1s linear infinite;
 }
+
+/* Image Tab */
+.image-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-prompt-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.image-prompt-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #232733;
+  background: #1a1d27;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  font-family: inherit;
+}
+
+.image-prompt-input:disabled {
+  opacity: 0.5;
+}
+
+.generate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #4f8cff;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.generate-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.image-placeholder {
+  text-align: center;
+  padding: 48px 16px;
+  color: #555;
+}
+
+.image-placeholder p {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.image-result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.generated-image {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #232733;
+}
+
+.image-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.image-prompt-label {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  flex: 1;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

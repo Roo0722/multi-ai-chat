@@ -52,3 +52,17 @@ export async function chatOpenRouter(apiKey, model, messages) {
   const data = await res.json();
   return data.choices?.[0]?.message?.content ?? '(empty response)';
 }
+
+export async function generateImage(prompt) {
+  const encoded = encodeURIComponent(prompt.trim());
+  // Use Pollinations Flux model -- free, no API key needed
+  const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&nologo=true&width=1024&height=1024`;
+
+  // Pollinations returns the image directly -- verify it loaded
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Image generation failed (${res.status}). Try again.`);
+  }
+  // Return the URL directly for use in <img src>
+  return url;
+}
