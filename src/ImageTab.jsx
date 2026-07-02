@@ -3,11 +3,13 @@ import { Wand2, Share2, AlertCircle, Loader, ImageOff } from 'lucide-react';
 import { Share } from '@capacitor/share';
 import { generateImage } from './api.js';
 
-export default function ImageTab() {
-  const [prompt, setPrompt] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+export default function ImageTab({ imageState, setImageState }) {
+  const { prompt, imageUrl, error } = imageState;
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  function setPrompt(val) { setImageState((s) => ({ ...s, prompt: val })); }
+  function setImageUrl(val) { setImageState((s) => ({ ...s, imageUrl: val })); }
+  function setError(val) { setImageState((s) => ({ ...s, error: val })); }
 
   async function handleGenerate() {
     if (!prompt.trim() || loading) return;

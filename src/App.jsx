@@ -9,6 +9,7 @@ export default function App() {
   const [tab, setTab] = useState('chat');
   const [settings, setSettings] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [imageState, setImageState] = useState({ prompt: '', imageUrl: '', error: '' });
 
   useEffect(() => {
     loadSettings().then(setSettings);
@@ -35,31 +36,24 @@ export default function App() {
         {tab === 'chat' && (
           <ChatTab settings={settings} messages={messages} setMessages={setMessages} />
         )}
-        {tab === 'image' && <ImageTab />}
+        {tab === 'image' && (
+          <ImageTab imageState={imageState} setImageState={setImageState} />
+        )}
         {tab === 'settings' && (
           <SettingsTab settings={settings} updateSettings={updateSettings} />
         )}
       </main>
 
       <nav className="tab-bar">
-        <button
-          className={tab === 'chat' ? 'tab-btn active' : 'tab-btn'}
-          onClick={() => setTab('chat')}
-        >
+        <button className={tab === 'chat' ? 'tab-btn active' : 'tab-btn'} onClick={() => setTab('chat')}>
           <MessageSquare size={16} strokeWidth={2} />
           Chat
         </button>
-        <button
-          className={tab === 'image' ? 'tab-btn active' : 'tab-btn'}
-          onClick={() => setTab('image')}
-        >
+        <button className={tab === 'image' ? 'tab-btn active' : 'tab-btn'} onClick={() => setTab('image')}>
           <Image size={16} strokeWidth={2} />
           Image
         </button>
-        <button
-          className={tab === 'settings' ? 'tab-btn active' : 'tab-btn'}
-          onClick={() => setTab('settings')}
-        >
+        <button className={tab === 'settings' ? 'tab-btn active' : 'tab-btn'} onClick={() => setTab('settings')}>
           <Settings size={16} strokeWidth={2} />
           Settings
         </button>
