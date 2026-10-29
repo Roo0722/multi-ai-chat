@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Bot, User, AlertCircle, Loader, Trash2, Copy, Download, Check } from 'lucide-react';
 import { Share } from '@capacitor/share';
-import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
+import { getProvider, chatCompletion, searchTavily } from './api.js';
 
 function CodeBlock({ children }) {
   const [copied, setCopied] = useState(false);
@@ -99,9 +99,10 @@ export default function ChatTab({ settings, messages, setMessages }) {
   const [error, setError] = useState('');
   const bottomRef = useRef(null);
 
-  const providerLabel = settings.activeProvider === 'groq' ? 'Groq' : 'OpenRouter';
-  const modelLabel = settings.activeProvider === 'groq' ? settings.groqModel : settings.openRouterModel;
-  const providerKey = settings.activeProvider === 'groq' ? settings.groqKey : settings.openRouterKey;
+  const provider = getProvider(settings.activeProvider);
+  const providerLabel = provider.label;
+  const modelLabel = settings[provider.modelField];
+  const providerKey = settings[provider.keyField];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -149,10 +150,7 @@ export default function ChatTab({ settings, messages, setMessages }) {
         }
       }
 
-      const reply =
-        settings.activeProvider === 'groq'
-          ? await chatGroq(settings.groqKey, settings.groqModel, contextMessages)
-          : await chatOpenRouter(settings.openRouterKey, settings.openRouterModel, contextMessages);
+      const reply = await chatCompletion(provider.id, providerKey, modelLabel, contextMessages);
 
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
       if (searchWarning) setError(searchWarning);

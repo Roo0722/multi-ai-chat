@@ -1,16 +1,18 @@
 import { Preferences } from '@capacitor/preferences';
+import { PROVIDERS } from './api.js';
 
 const KEY = 'multi_ai_chat_settings';
 
+// Built from the provider list so a new provider gets its key/model fields automatically.
 const DEFAULTS = {
-  groqKey: '',
-  openRouterKey: '',
   tavilyKey: '',
-  groqModel: 'llama-3.3-70b-versatile',
-  openRouterModel: 'openai/gpt-4o-mini',
   activeProvider: 'groq',
   useTavily: false
 };
+for (const p of Object.values(PROVIDERS)) {
+  DEFAULTS[p.keyField] = '';
+  DEFAULTS[p.modelField] = p.defaultModel;
+}
 
 export async function loadSettings() {
   const { value } = await Preferences.get({ key: KEY });

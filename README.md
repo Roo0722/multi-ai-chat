@@ -1,6 +1,6 @@
 # Nexus -- Multi AI Chat
 
-A free Android chat app powered by Groq, OpenRouter, and Pollinations.ai.
+A free Android chat app powered by Groq, OpenRouter, Cerebras, Google Gemini, Mistral, and Pollinations.ai.
 Supports AI chat with web search and AI image generation.
 API keys are stored on-device only. No backend, no accounts required.
 
@@ -8,7 +8,8 @@ API keys are stored on-device only. No backend, no accounts required.
 
 ## Features
 
-- AI Chat via Groq or OpenRouter (your choice per session)
+- AI Chat via Groq, OpenRouter, Cerebras, Google Gemini or Mistral (your choice per session)
+- "Load models" button in Settings lists the models each provider currently offers
 - Web search via Tavily injected into AI context before each reply
 - AI Image Generation via Pollinations.ai Flux (free, no key needed)
 - Markdown rendering in chat responses
@@ -76,6 +77,18 @@ Example models to enter in the OpenRouter Model field:
 Full model list: https://openrouter.ai/models
 
 ---
+
+### Cerebras, Google Gemini, Mistral (optional, free tiers)
+
+Each works the same way: create a free account, create an API key, paste it into that provider's field in Settings, then tap **Load models** and pick a model (default model names may go out of date).
+
+- Cerebras: https://cloud.cerebras.ai
+- Google Gemini: https://aistudio.google.com/apikey (free-tier prompts may be used for training outside the EU/UK/EEA)
+- Mistral: https://console.mistral.ai (the free tier may require allowing data use for training)
+
+Free-tier limits change often; check each provider's dashboard.
+
+* * *
 
 ### Tavily (web search, optional)
 

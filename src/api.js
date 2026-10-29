@@ -13,6 +13,103 @@ async function timedFetch(url, options = {}, ms = 60000) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Chat providers. All of them speak the OpenAI-compatible /chat/completions API,
+// so adding one is just a new entry here (settings and chat pick it up automatically).
+// keyField / modelField are the names used in saved settings (kept stable so
+// existing installs keep their keys).
+// Default models are suggestions: use "Load models" in Settings to pick a current one.
+// ---------------------------------------------------------------------------
+export const PROVIDERS = {
+  groq: {
+    id: 'groq',
+    label: 'Groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    keyField: 'groqKey',
+    modelField: 'groqModel',
+    defaultModel: 'llama-3.3-70b-versatile',
+    keyPlaceholder: 'gsk_...'
+  },
+  openrouter: {
+    id: 'openrouter',
+    label: 'OpenRouter',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    keyField: 'openRouterKey',
+    modelField: 'openRouterModel',
+    defaultModel: 'openai/gpt-4o-mini',
+    keyPlaceholder: 'sk-or-...',
+    headers: { 'HTTP-Referer': 'https://multi-ai-chat.local', 'X-Title': 'Nexus' }
+  },
+  cerebras: {
+    id: 'cerebras',
+    label: 'Cerebras',
+    baseUrl: 'https://api.cerebras.ai/v1',
+    keyField: 'cerebrasKey',
+    modelField: 'cerebrasModel',
+    defaultModel: 'gpt-oss-120b',
+    keyPlaceholder: 'csk-...'
+  },
+  gemini: {
+    id: 'gemini',
+    label: 'Google Gemini',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    keyField: 'geminiKey',
+    modelField: 'geminiModel',
+    defaultModel: 'gemini-flash-latest',
+    keyPlaceholder: 'AIza...'
+  },
+  mistral: {
+    id: 'mistral',
+    label: 'Mistral',
+    baseUrl: 'https://api.mistral.ai/v1',
+    keyField: 'mistralKey',
+    modelField: 'mistralModel',
+    defaultModel: 'mistral-small-latest',
+    keyPlaceholder: 'API key'
+  }
+};
+
+export function getProvider(id) {
+  return PROVIDERS[id] || PROVIDERS.groq;
+}
+
+export async function chatCompletion(providerId, apiKey, model, messages) {
+  const p = getProvider(providerId);
+  const res = await timedFetch(`${p.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      ...(p.headers || {})
+    },
+    body: JSON.stringify({ model, messages })
+  });
+  if (!res.ok) {
+    throw new Error(`${p.label} error ${res.status}: ${await res.text()}`);
+  }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content ?? '(empty response)';
+}
+
+// Fetch the model ids a provider currently offers (for the model picker in Settings).
+export async function listModels(providerId, apiKey) {
+  const p = getProvider(providerId);
+  const res = await timedFetch(
+    `${p.baseUrl}/models`,
+    { headers: { Authorization: `Bearer ${apiKey}`, ...(p.headers || {}) } },
+    30000
+  );
+  if (!res.ok) {
+    throw new Error(`${p.label} error ${res.status}: ${(await res.text()).slice(0, 100)}`);
+  }
+  const data = await res.json();
+  const items = Array.isArray(data) ? data : data.data || data.models || [];
+  return items
+    .map((m) => String(m.id || m.name || '').replace(/^models\//, ''))
+    .filter(Boolean)
+    .sort();
+}
+
 export async function searchTavily(apiKey, query) {
   const res = await timedFetch('https://api.tavily.com/search', {
     method: 'POST',
@@ -32,40 +129,6 @@ export async function searchTavily(apiKey, query) {
     .map((r, i) => `[${i + 1}] ${r.title}\n${r.content}\nSource: ${r.url}`)
     .join('\n\n');
   return data.answer ? `${data.answer}\n\n${results}` : results;
-}
-
-export async function chatGroq(apiKey, model, messages) {
-  const res = await timedFetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({ model, messages })
-  });
-  if (!res.ok) {
-    throw new Error(`Groq error ${res.status}: ${await res.text()}`);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? '(empty response)';
-}
-
-export async function chatOpenRouter(apiKey, model, messages) {
-  const res = await timedFetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://multi-ai-chat.local',
-      'X-Title': 'Multi AI Chat'
-    },
-    body: JSON.stringify({ model, messages })
-  });
-  if (!res.ok) {
-    throw new Error(`OpenRouter error ${res.status}: ${await res.text()}`);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? '(empty response)';
 }
 
 // Pollinations Flux -- free, no API key needed.
