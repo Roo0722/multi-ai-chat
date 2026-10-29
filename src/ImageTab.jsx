@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Wand2, Share2, AlertCircle, Loader, ImageOff, Trash2 } from 'lucide-react';
 import { Share } from '@capacitor/share';
-import { generateImage } from './api.js';
+import { generateImage, getImageCooldownLeft } from './api.js';
 
 export default function ImageTab({ imageState, setImageState }) {
   const { prompt, imageUrl, error } = imageState;
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(getImageCooldownLeft());
+
+  // Free Pollinations tier allows ~1 image per 45s: tick the countdown while it runs.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setInterval(() => setCooldown(getImageCooldownLeft()), 500);
+    return () => clearInterval(t);
+  }, [cooldown > 0]);
 
   function setPrompt(val) { setImageState((s) => ({ ...s, prompt: val })); }
   function setImageUrl(val) { setImageState((s) => ({ ...s, imageUrl: val })); }
@@ -23,12 +31,13 @@ export default function ImageTab({ imageState, setImageState }) {
   }, [loading, setImageState]);
 
   function handleGenerate() {
-    if (!prompt.trim() || loading) return;
+    if (!prompt.trim() || loading || getImageCooldownLeft() > 0) return;
     setError('');
     setImageUrl('');
     setLoading(true);
     // The <img> below loads the URL; loading stays true until its onLoad/onError fires.
     setImageUrl(generateImage(prompt));
+    setCooldown(getImageCooldownLeft());
   }
 
   async function handleShare() {
@@ -62,11 +71,13 @@ export default function ImageTab({ imageState, setImageState }) {
           <button
             className="generate-btn"
             onClick={handleGenerate}
-            disabled={!prompt.trim() || loading}
+            disabled={!prompt.trim() || loading || cooldown > 0}
           >
             {loading
               ? <><Loader size={16} strokeWidth={2} className="spin" /> Generating...</>
-              : <><Wand2 size={16} strokeWidth={2} /> Generate</>}
+              : cooldown > 0
+                ? <>Wait {Math.ceil(cooldown / 1000)}s</>
+                : <><Wand2 size={16} strokeWidth={2} /> Generate</>}
           </button>
           {(imageUrl || prompt || error) && (
             <button className="clear-btn" onClick={handleClear} disabled={loading}>
@@ -101,7 +112,7 @@ export default function ImageTab({ imageState, setImageState }) {
             onLoad={() => setLoading(false)}
             onError={() => {
               setLoading(false);
-              setImageState((s) => ({ ...s, imageUrl: '', error: 'Image failed to load. Try generating again.' }));
+              setImageState((s) => ({ ...s, imageUrl: '', error: 'Image failed to load. The free service may be rate-limiting (about 1 image per 45s). Wait and try again.' }));
             }}
           />
           <div className="image-actions">

@@ -72,7 +72,16 @@ export async function chatOpenRouter(apiKey, model, messages) {
 // Returns a URL for <img src>. The <img> element is the only request made
 // (no pre-fetch), so the image is not downloaded twice. A random seed makes
 // repeated prompts produce new images instead of a cached one.
+export const IMAGE_COOLDOWN_MS = 45000;
+let lastImageRequestAt = 0; // module-level, so it survives tab switches
+
+// Milliseconds left before the free Pollinations tier will accept another request.
+export function getImageCooldownLeft() {
+  return Math.max(0, lastImageRequestAt + IMAGE_COOLDOWN_MS - Date.now());
+}
+
 export function generateImage(prompt) {
+  lastImageRequestAt = Date.now();
   const encoded = encodeURIComponent(prompt.trim());
   const seed = Math.floor(Math.random() * 1000000);
   return `https://image.pollinations.ai/prompt/${encoded}?model=flux&nologo=true&width=1024&height=1024&seed=${seed}`;
@@ -81,6 +90,11 @@ export function generateImage(prompt) {
 // Used by Settings -> "Test Image Gen": resolves if the service returns a loadable image.
 export function testImageService(timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
+    const wait = getImageCooldownLeft();
+    if (wait > 0) {
+      reject(new Error(`Rate limit: wait ${Math.ceil(wait / 1000)}s (free tier allows ~1 image / 45s).`));
+      return;
+    }
     const img = new window.Image();
     const timer = setTimeout(() => {
       img.src = '';

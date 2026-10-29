@@ -92,7 +92,7 @@ Useful for current events, research, and fact-checking.
 
 ### Image Generation (Pollinations.ai)
 
-No API key needed. Image generation works out of the box.
+No API key needed. Image generation works out of the box. The free tier is rate-limited (about one image per 45 seconds), so the Generate button shows a countdown between requests.
 Switch to the **Image** tab, type a prompt, and tap Generate.
 
 ---
