@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KeyRound, Bot, Globe, Search, CheckCircle, XCircle, Loader, Image } from 'lucide-react';
-import { chatGroq, chatOpenRouter, searchTavily, generateImage } from './api.js';
+import { chatGroq, chatOpenRouter, searchTavily, testImageService } from './api.js';
 
 function StatusBadge({ status }) {
   if (!status) return null;
@@ -47,7 +47,7 @@ export default function SettingsTab({ settings, updateSettings }) {
     setTestStatus((s) => ({ ...s, tavily: 'testing' }));
     setTestMsg((s) => ({ ...s, tavily: '' }));
     try {
-      const result = await searchTavily(settings.tavilyKey, 'test');
+      await searchTavily(settings.tavilyKey, 'test');
       setTestStatus((s) => ({ ...s, tavily: 'ok' }));
       setTestMsg((s) => ({ ...s, tavily: 'Search returned results.' }));
     } catch (e) {
@@ -60,7 +60,7 @@ export default function SettingsTab({ settings, updateSettings }) {
     setTestStatus((s) => ({ ...s, image: 'testing' }));
     setTestMsg((s) => ({ ...s, image: '' }));
     try {
-      await generateImage('a simple blue circle');
+      await testImageService();
       setTestStatus((s) => ({ ...s, image: 'ok' }));
       setTestMsg((s) => ({ ...s, image: 'Image generation is working.' }));
     } catch (e) {

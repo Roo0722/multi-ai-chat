@@ -1,5 +1,20 @@
+async function timedFetch(url, options = {}, ms = 60000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } catch (e) {
+    if (e && e.name === 'AbortError') {
+      throw new Error('Request timed out. Check your connection and try again.');
+    }
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function searchTavily(apiKey, query) {
-  const res = await fetch('https://api.tavily.com/search', {
+  const res = await timedFetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -20,7 +35,7 @@ export async function searchTavily(apiKey, query) {
 }
 
 export async function chatGroq(apiKey, model, messages) {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await timedFetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -36,7 +51,7 @@ export async function chatGroq(apiKey, model, messages) {
 }
 
 export async function chatOpenRouter(apiKey, model, messages) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const res = await timedFetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -53,16 +68,26 @@ export async function chatOpenRouter(apiKey, model, messages) {
   return data.choices?.[0]?.message?.content ?? '(empty response)';
 }
 
-export async function generateImage(prompt) {
+// Pollinations Flux -- free, no API key needed.
+// Returns a URL for <img src>. The <img> element is the only request made
+// (no pre-fetch), so the image is not downloaded twice. A random seed makes
+// repeated prompts produce new images instead of a cached one.
+export function generateImage(prompt) {
   const encoded = encodeURIComponent(prompt.trim());
-  // Use Pollinations Flux model -- free, no API key needed
-  const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&nologo=true&width=1024&height=1024`;
+  const seed = Math.floor(Math.random() * 1000000);
+  return `https://image.pollinations.ai/prompt/${encoded}?model=flux&nologo=true&width=1024&height=1024&seed=${seed}`;
+}
 
-  // Pollinations returns the image directly -- verify it loaded
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Image generation failed (${res.status}). Try again.`);
-  }
-  // Return the URL directly for use in <img src>
-  return url;
+// Used by Settings -> "Test Image Gen": resolves if the service returns a loadable image.
+export function testImageService(timeoutMs = 60000) {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const timer = setTimeout(() => {
+      img.src = '';
+      reject(new Error('Image service timed out.'));
+    }, timeoutMs);
+    img.onload = () => { clearTimeout(timer); resolve(); };
+    img.onerror = () => { clearTimeout(timer); reject(new Error('Image service failed to respond.')); };
+    img.src = generateImage('a simple blue circle');
+  });
 }

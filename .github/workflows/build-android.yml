@@ -3,17 +3,40 @@ name: Build Android APK
 on:
   push:
     branches: [main]
+    tags: ['v*']
+  pull_request: {}
   workflow_dispatch: {}
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  # Runs on pull requests (no secrets needed): make sure the web app builds.
+  check:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  build:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to attach the APK to a GitHub Release on tags
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - uses: actions/setup-java@v4
         with:
@@ -21,7 +44,7 @@ jobs:
           java-version: 17
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build web assets
         run: npm run build
@@ -31,6 +54,18 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync android
+
+      - name: Harden and version the Android project
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          GRADLE=android/app/build.gradle
+          # Don't let API keys in SharedPreferences be included in cloud/adb backups
+          sed -i 's/android:allowBackup="true"/android:allowBackup="false"/' "$MANIFEST"
+          grep -q 'android:allowBackup="false"' "$MANIFEST"
+          # Increasing versionCode so each build can be installed over the previous one
+          sed -i "s/versionCode 1/versionCode ${GITHUB_RUN_NUMBER}/" "$GRADLE"
+          sed -i "s/versionName \"1.0\"/versionName \"1.0.${GITHUB_RUN_NUMBER}\"/" "$GRADLE"
+          grep -q "versionCode ${GITHUB_RUN_NUMBER}" "$GRADLE"
 
       - name: Copy app icons
         run: |
@@ -48,11 +83,14 @@ jobs:
           rm -rf $RES/mipmap-anydpi-v26
 
       - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/nexus-release.jks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > android/nexus-release.jks
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
+
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Build signed release APK
         working-directory: android
@@ -73,3 +111,10 @@ jobs:
         with:
           name: nexus-signed-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+
+      # Push a tag like v1.0.0 to publish a permanent download on the Releases page
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/release/app-release.apk

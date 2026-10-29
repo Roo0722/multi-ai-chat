@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wand2, Share2, AlertCircle, Loader, ImageOff, Trash2 } from 'lucide-react';
 import { Share } from '@capacitor/share';
 import { generateImage } from './api.js';
@@ -12,19 +12,23 @@ export default function ImageTab({ imageState, setImageState }) {
   function setError(val) { setImageState((s) => ({ ...s, error: val })); }
   function handleClear() { setImageState({ prompt: '', imageUrl: '', error: '' }); }
 
-  async function handleGenerate() {
+  // Safety net: stop the spinner if the image never loads.
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => {
+      setLoading(false);
+      setImageState((s) => ({ ...s, imageUrl: '', error: 'Image timed out. Try again.' }));
+    }, 90000);
+    return () => clearTimeout(t);
+  }, [loading, setImageState]);
+
+  function handleGenerate() {
     if (!prompt.trim() || loading) return;
     setError('');
     setImageUrl('');
     setLoading(true);
-    try {
-      const url = await generateImage(prompt);
-      setImageUrl(url);
-    } catch (e) {
-      setError(e.message || String(e));
-    } finally {
-      setLoading(false);
-    }
+    // The <img> below loads the URL; loading stays true until its onLoad/onError fires.
+    setImageUrl(generateImage(prompt));
   }
 
   async function handleShare() {
@@ -80,7 +84,7 @@ export default function ImageTab({ imageState, setImageState }) {
         </div>
       )}
 
-      {loading && !imageUrl && (
+      {loading && (
         <div className="image-placeholder">
           <Loader size={32} strokeWidth={1.5} className="spin" style={{ color: '#4f8cff' }} />
           <p>Generating your image with Flux...</p>
@@ -88,13 +92,17 @@ export default function ImageTab({ imageState, setImageState }) {
         </div>
       )}
 
-      {imageUrl && !loading && (
-        <div className="image-result">
+      {imageUrl && (
+        <div className="image-result" style={loading ? { display: 'none' } : undefined}>
           <img
             src={imageUrl}
             alt={prompt}
             className="generated-image"
-            onError={() => setError('Image failed to load. Try generating again.')}
+            onLoad={() => setLoading(false)}
+            onError={() => {
+              setLoading(false);
+              setImageState((s) => ({ ...s, imageUrl: '', error: 'Image failed to load. Try generating again.' }));
+            }}
           />
           <div className="image-actions">
             <p className="image-prompt-label">"{prompt}"</p>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, User, AlertCircle, Loader, Trash2, Copy, Download, Check, Share2 } from 'lucide-react';
+import { Send, Bot, User, AlertCircle, Loader, Trash2, Copy, Download, Check } from 'lucide-react';
 import { Share } from '@capacitor/share';
 import { chatGroq, chatOpenRouter, searchTavily } from './api.js';
 
@@ -27,14 +27,28 @@ function CodeBlock({ children }) {
   );
 }
 
+// react-markdown v9 has no `inline` prop: override `pre` for fenced blocks and
+// let inline `code` fall through to the default renderer.
+function textOf(node) {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join('');
+  return textOf(node.props && node.props.children);
+}
+
 const markdownComponents = {
-  code({ node, inline, className, children, ...props }) {
-    if (inline) {
-      return <code className={className} {...props}>{children}</code>;
-    }
-    return <CodeBlock>{children}</CodeBlock>;
+  pre({ children }) {
+    return <CodeBlock>{textOf(children)}</CodeBlock>;
   }
 };
+
+// Tavily works best with a standalone query: for short follow-ups, include the previous user turn.
+function buildSearchQuery(msgs) {
+  const users = msgs.filter((m) => m.role === 'user').map((m) => m.content);
+  const last = users[users.length - 1] || '';
+  const q = last.length < 40 && users.length > 1 ? `${users[users.length - 2]} ${last}` : last;
+  return q.slice(0, 400);
+}
 
 function CopyDownloadBar({ content, index }) {
   const [copied, setCopied] = useState(false);
@@ -57,7 +71,7 @@ function CopyDownloadBar({ content, index }) {
       });
     } catch (e) {
       // User cancelled share sheet -- not an error
-      if (e && e.message && !e.message.includes('cancel')) {
+      if (e && e.message && !e.message.toLowerCase().includes('cancel')) {
         navigator.clipboard.writeText(content);
       }
     } finally {
@@ -113,18 +127,26 @@ export default function ChatTab({ settings, messages, setMessages }) {
     setInput('');
     setLoading(true);
 
+    let searchWarning = '';
     try {
       let contextMessages = nextMessages;
 
       if (settings.useTavily && settings.tavilyKey) {
-        const results = await searchTavily(settings.tavilyKey, input);
-        contextMessages = [
-          {
-            role: 'system',
-            content: `Relevant web search results:\n\n${results}\n\nUse these if helpful and cite sources.`
-          },
-          ...nextMessages
-        ];
+        try {
+          const results = await searchTavily(settings.tavilyKey, buildSearchQuery(nextMessages));
+          if (results) {
+            contextMessages = [
+              {
+                role: 'system',
+                content: `Relevant web search results:\n\n${results}\n\nUse these if helpful and cite sources.`
+              },
+              ...nextMessages
+            ];
+          }
+        } catch (searchErr) {
+          // Search is optional: still answer, but tell the user it was skipped.
+          searchWarning = `Web search failed, answered without it: ${(searchErr.message || String(searchErr)).slice(0, 120)}`;
+        }
       }
 
       const reply =
@@ -133,7 +155,11 @@ export default function ChatTab({ settings, messages, setMessages }) {
           : await chatOpenRouter(settings.openRouterKey, settings.openRouterModel, contextMessages);
 
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+      if (searchWarning) setError(searchWarning);
     } catch (err) {
+      // Roll back the unanswered message and restore the input so Retry doesn't duplicate it.
+      setMessages(messages);
+      setInput(userMsg.content);
       setError(err.message || String(err));
     } finally {
       setLoading(false);
@@ -210,12 +236,12 @@ export default function ChatTab({ settings, messages, setMessages }) {
         <input
           type="text"
           value={input}
-          placeholder="Type a message..."
+          placeholder="Type a message..." aria-label="Message"
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleSend()}
           disabled={loading}
         />
-        <button onClick={handleSend} disabled={loading} className="send-btn">
+        <button onClick={handleSend} disabled={loading} className="send-btn" aria-label="Send message">
           <Send size={18} strokeWidth={2} />
         </button>
       </div>
